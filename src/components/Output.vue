@@ -19,7 +19,7 @@ export default {
   computed: {
     displayTokens() {
       return Object.entries(this.outputCode).map(([key, value]) => {
-        return `${key} : [${value.join(", ")}]`
+        return `${key} : ${value.join(", ")}`
       });
     },
   },
