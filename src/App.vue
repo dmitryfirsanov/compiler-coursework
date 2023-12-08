@@ -1,32 +1,28 @@
 <template>
-  <main class="mx-auto max-w-screen-xl">
-
+  <main class="mx-auto max-w-screen-xl text-center mt-2">
+    <h1 class="text-blue-500 text-lg">Компилятор Фирсанов</h1>
     <div class="mt-8 flex flex-row items-center justify-between">
       <Input @tokens-updated="updateTokens" />
-
-      <h3 class="text-blue-500 text-lg">Лексический анализ</h3>
-
       <Output :output-code="tokens" />
     </div>
   </main>
 </template>
 
-<script>
+<script setup>
+import { ref } from 'vue'
 import Input from './components/Input.vue';
 import Output from './components/Output.vue';
+const tokens = ref({
+  keywords: [],
+  identifiers: [],
+  numbers: [],
+  separators: [],
+  unknown: [],
+});
 
-export default {
-  components: { Input, Output },
-  data() {
-    return {
-      tokens: {},
-    };
-  },
-  methods: {
-    updateTokens(tokens) {
-      this.tokens = tokens;
-    },
-  },
+function updateTokens(newTokens) {
+  console.log(newTokens)
+  tokens.value = newTokens;
 }
 </script>
 

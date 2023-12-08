@@ -1,3 +1,14 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+@font-face {
+  font-family: "MesloLGS NF";
+  font-weight: 400;
+  src: url("./assets/fonts/MesloLGS NF Regular.ttf")
+}
+
+.editor {
+  font-family: "MesloLGS NF";
+  font-size: 20;
+}
