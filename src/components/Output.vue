@@ -2,26 +2,32 @@
   <div>
     <textarea
       name="output"
-      cols="65"
-      rows="25"
-      class="resize-none border rounded border-black p-3 bg-gray-100 outline-none cursor-default"
+      cols="60"
+      rows="22"
+      class="editor w-full p-10 text-sm outline-none text-gray-900 bg-white rounded dark:bg-gray-800 focus:ring-0 dark:text-white dark:placeholder-gray-400"
       readonly
-    >{{ displayTokens }}</textarea>
+    >{{ outputCode }}</textarea>
   </div>
 </template>
 
-<script>
+<script setup>
+import { computed } from 'vue';
 
-export default {
-  props: {
-    outputCode: Object,
-  },
-  computed: {
-    displayTokens() {
-      return Object.entries(this.outputCode).map(([key, value]) => {
-        return `${key} : ${value.join(", ")}`
-      });
-    },
-  },
-}
-</script>
+const props = defineProps({
+  outputCode: Object,
+})
+
+const displayTokens = computed(() => {
+  if (props.outputCode.value) {
+    return Object.entries(props.outputCode.value).map(([key, value]) => {
+      return `${key} : ${value};`;
+    }).join('\n');
+  } else {
+    return '';
+  }
+})
+
+// const displayPegResult = computed(() => {
+  
+// })
+</script>                                  
