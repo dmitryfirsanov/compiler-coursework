@@ -2,128 +2,120 @@
   <div>
     <textarea
       v-model="inputCode"
-      @input="parser"
-      cols="65"
-      rows="25"
-      class="resize-none border rounded border-black p-3 bg-gray-100  outline-none"
-      placeholder="Напиши код"
+      @input="syntaxAnalyzer"
+      cols="60"
+      rows="22"
+      class="editor w-full p-10 text-sm outline-none text-gray-900 bg-white rounded border-0 dark:bg-gray-800 focus:ring-0 dark:text-white dark:placeholder-gray-400"
+      placeholder="Write a code..."
     ></textarea>
   </div>
 </template>
 
-<script>
-import peg from 'pegjs';
+<script setup>
+import { ref } from 'vue';
+import peggy from 'peggy';
 
-export default {
-  data() {
-    return {
-      inputCode: '',
-      tokens: {},
-    };
-  },
-  methods: {
-    analyzeCode() {
-      this.tokens = {
-        keywords: [],
-        identifiers: [],
-        numbers: [],
-        separators: [],
-        unknown: [],
-      };
+const emits = defineEmits(['tokens-updated']);
+const inputCode = ref('');
+const tokens = ref({});
 
-      const code = this.inputCode;
-      const globalRegex = /program|var|begin|end|integer|real|boolean|read|output|do\swhile|true|false|switch|case|for|let|[a-z]+\d*[a-z]*|\d+|[+\-*/=<>]|\(|\)|,|;|:|:=|!|&&|\|\||\.{1,2}|\{|\}/g;
+function lexicaдAnalyzer() {
+  tokens.value = {
+    keywords: [],
+    identifiers: [],
+    numbers: [],
+    separators: [],
+    unknown: [],
+  };
 
-      const matches = code.match(globalRegex);
+  const code = inputCode.value;
+  const globalRegex = /program|var|begin|end|integer|real|boolean|read|output|do\swhile|true|false|switch|case|for|let|[a-z]+\d*[a-z]*|\d+|[+\-*/=<>]|\(|\)|,|;|:|:=|!|&&|\|\||\.{1,2}|\{|\}/g;
 
-      if (matches) {
-        for (const match of matches) {
-          this.tokens[this.getTokenType(match)].push(match);
-        }
-      }
+  const matches = code.match(globalRegex);
 
-      this.$emit('tokens-updated', this.tokens);
-    },
-    getTokenType(token) {
-      const regex = {
-        keywords: /^program|var|begin|end|integer|real|boolean|read|output|do\swhile|true|false|switch|case|for|let$/,
-        identifier: /^[a-z]\w*$/,
-        number: /^\d+$/,
-        separator: /^[{}()=<>;:.,+\-*/!]$/,
-      };
+  if (matches) {
+    for (const match of matches) {
+      tokens.value[getTokenType(match)].push(match);
+    }
+  }
 
-      if (regex.keywords.test(token)) {
-        return 'keywords';
-      } else if (regex.identifier.test(token)) {
-        return 'identifiers';
-      } else if (regex.number.test(token)) {
-        return 'numbers';
-      } else if (regex.separator.test(token) || token === "||" || token === "&&") {
-        return 'separators';
-      } else {
-        return 'unknown';
-      }
-    },
-    parser() {
-      const code = this.outputCode;
+  emits('tokens-updated', tokens);
+}
 
-      const grammar = `start = программа
+function getTokenType(token) {
+  const regex = {
+    keywords: /^program|var|begin|end|integer|real|boolean|read|output|do\swhile|true|false|switch|case|for|let$/,
+    identifier: /^[a-z]\w*$/,
+    number: /^\d+$/,
+    separator: /^[{}()=<>;:.,+\-*/!]$/,
+  };
+
+  if (regex.keywords.test(token)) {
+    return 'keywords';
+  } else if (regex.identifier.test(token)) {
+    return 'identifiers';
+  } else if (regex.number.test(token)) {
+    return 'numbers';
+  } else if (regex.separator.test(token) || token === "||" || token === "&&") {
+    return 'separators';
+  } else {
+    return 'unknown';
+  }
+}
+
+function syntaxAnalyzer() {
+  const code = inputCode.value;
+
+  const grammar = `start = программа
 
 буква = [a-z]
 цифра = [0-9]
-пробел = ' '
+_ "whitespace" = [ \\t\\n\\r]*
 
-идентификатор = буква цифра* последовательность_букв*
-последовательность_букв = буква цифра* последовательность_букв?
+идентификатор = буква цифра* последовательностьБукв*
+последовательностьБукв = буква цифра* последовательностьБукв?
 число = цифра+
-
-ключевое_слово = "program" / "var" / "begin" / "end" / "integer" / "real" / "boolean" / "read" / "output" / "do while" / "true" / "false" / "switch" / "case" / "for" / "let"
-
-разделитель = '(' / ')' / ',' / ';' / ':' / ':=' / '.' / '{' / '}' / '+' / '-' / '*' / '/' / '||' / '&&' / '!' / '=' / '<' / '>'
 
 тип = "integer" / "real" / "boolean"
 
-программа = "program" "var" описание ":begin" оператор+ "end."
+программа = "program" _ "var" _ описание _ "begin" _ оператор+ _ "end"
 
-описание = тип идентификатор (',' идентификатор)*
+описание = тип _ идентификатор _ (',' _ идентификатор)*
 
 тело = "begin" (оператор ';' )* "end"
 
-оператор = присваивание / условный / фиксированный_цикл / условный_цикл / составной / ввод / вывод
+оператор = присваивание / условный / фиксированныйЦикл / условныйЦикл / составной / ввод / вывод
 
-присваивание = ("let")? идентификатор ":=" выражение ";"
+присваивание = ("let" _)? идентификатор _ ":=" _ выражение ";"
 
 условный = "switch" выражение "{" "case" идентификатор ":" оператор "}" 
 
-фиксированный_цикл = "for" "[" выражение ";" выражение ";" выражение "]" оператор
+фиксированныйЦикл = "for" "[" выражение ";" выражение ";" выражение "]" оператор
 
-условный_цикл = "do while" выражение оператор "loop"
+условныйЦикл = "do while" выражение оператор "loop"
 
 составной = "begin" оператор+ "end"
 
 ввод = "read" "(" идентификатор (',' идентификатор)* ")"
 
-вывод = "output" "(" выражение (пробел выражение)* ")"
+вывод = "output" "(" выражение (_ выражение)* ")"
 
-выражение = сумма / произведение / логическая_константа ";"
+выражение = сумма / произведение / логическаяКонстанта ";"
 
 сумма = произведение ("+" / "-" / "&&") произведение*
 
 произведение = множитель / ("*" / "/" / "||") множитель*
 
-множитель = идентификатор / число / логическая_константа / "!" множитель / "(" выражение ")"
+множитель = идентификатор / число / логическаяКонстанта / "!" множитель / "(" выражение ")"
 
-логическая_константа = "true" / "false"
-`;
+логическаяКонстанта = "true" / "false"`;
 
-      const parser = peg.generate(grammar);
-      try {
-        const result = parser.parse(this.inputCode.replace(/\s+/g, ''));
-        console.log(JSON.stringify(result, null, 2));
-      } catch (error) {
-        console.log(error)
-      }
-    }
-  },
-};
+  const parser = peggy.generate(grammar);
+  try {
+    const result = parser.parse(code);
+    console.log(JSON.stringify(result, null, 2));
+  } catch (error) {
+    console.log(error);
+  }
+}
 </script>
