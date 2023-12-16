@@ -1,9 +1,17 @@
 <template>
   <main class="mx-auto max-w-screen-xl text-center mt-2">
     <h1 class="text-blue-500 text-lg">Компилятор Фирсанов</h1>
-    <div class="mt-8 flex flex-row items-center justify-between">
-      <Input @tokens-updated="updateTokens" />
-      <Output :output-code="tokens" />
+    <div class="mt-8 flex flex-row items-start justify-between">
+      <Input
+        @lexical-update="lexicalAnalyzer"
+        @syntax-update="syntaxAnalyzer"
+        @semantic-update="semanticAnalyzer"
+      />
+      <Output
+        :outputLexical="lexicalAnalyzerOutput"
+        :outputSyntax="syntaxAnalyzerOutput"
+        :outputSemantic="semanticAnalyzerOutput"
+      />
     </div>
   </main>
 </template>
@@ -12,17 +20,21 @@
 import { ref } from 'vue'
 import Input from './components/Input.vue';
 import Output from './components/Output.vue';
-const tokens = ref({
-  keywords: [],
-  identifiers: [],
-  numbers: [],
-  separators: [],
-  unknown: [],
-});
 
-function updateTokens(newTokens) {
-  console.log(newTokens)
-  tokens.value = newTokens;
+const lexicalAnalyzerOutput = ref({});
+const syntaxAnalyzerOutput = ref({});
+const semanticAnalyzerOutput = ref('');
+
+function lexicalAnalyzer(output) {
+  lexicalAnalyzerOutput.value = output;
+}
+
+function syntaxAnalyzer(output) {
+  syntaxAnalyzerOutput.value = output;
+}
+
+function semanticAnalyzer(output) {
+  semanticAnalyzerOutput.value = output;
 }
 </script>
 
